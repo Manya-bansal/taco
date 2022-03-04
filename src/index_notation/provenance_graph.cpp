@@ -921,7 +921,8 @@ ProvenanceGraph::ProvenanceGraph(IndexStmt concreteStmt) {
       childrenMap[parent] = children;
 
       if (rel.getRelType() != PRECOMPUTE && childrenRelMap[parent].size() > 0){
-        taco_uerror << " Cannot attach two relation types to one node " << endl;
+        // check if the current relation is precompute 
+        taco_uerror << " Cannot attach two relation types to one node stuck on type: " << rel.getRelType() << endl;
       }
 
       for (IndexVar child : children){
