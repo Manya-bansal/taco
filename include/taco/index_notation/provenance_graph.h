@@ -5,7 +5,7 @@
 
 namespace taco {
 struct IndexVarRelNode;
-enum IndexVarRelType {UNDEFINED, SPLIT, DIVIDE, POS, FUSE, BOUND, PRECOMPUTE};
+enum IndexVarRelType {UNDEFINED, SPLIT, DIVIDE, POS, FUSE, BOUND, PRECOMPUTE, GENERIC};
 
 /// A pointer class for IndexVarRelNodes provides some operations for all IndexVarRelTypes
 class IndexVarRel : public util::IntrusivePtr<const IndexVarRelNode> {
@@ -75,9 +75,61 @@ struct IndexVarRelNode : public util::Manageable<IndexVarRelNode>,
   IndexVarRelType relType;
 };
 
+
+
+struct GenericRelNode : public IndexVarRelNode{
+
+  GenericRelNode() : relType(GENERIC) {}
+  GenericRelNode(IndexVarRelType type) : IndexVarRelNode(type) {}
+  virtual ~GenericRelNode() = default;
+
+  virtual void print(std::ostream& stream) const {
+    taco_iassert(relType == UNDEFINED);
+    stream << "underived";
+  }
+
+  /// returns list of index variables that are derived from
+  virtual std::vector<IndexVar> getParents() const {
+    taco_ierror;
+    return {};
+  }
+
+  /// returns list of index variables that are newly derived
+  virtual std::vector<IndexVar> getChildren() const {
+    taco_ierror;
+    return {};
+  }
+
+  /// returns list of index variables that are sized based on the size of the parent index variables (ie. outer for split)
+  virtual std::vector<IndexVar> getIrregulars() const {
+    taco_ierror;
+    return {};
+  }
+
+  /// if parent is in position space then bound is just the parent's bound
+  /// if innerVar defined and not outerVar or if neither variables are defined then return the parent's bound
+  /// if the outerVar is already defined then the inner var constrains bound to splitFactor-sized strip at outerVar * splitFactor
+  /// if both variables are defined then constrain to single length 1 strip at outerVar * splitFactor + innerVar
+  std::vector<ir::Expr> computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const;
+
+  /// outerVar has parentBounds / splitFactor and innerVar has 0 -> splitFactor
+  std::vector<ir::Expr> deriveIterBounds(IndexVar indexVar, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, std::map<taco::IndexVar, taco::ir::Expr> variableNames, Iterators iterators, ProvenanceGraph provGraph) const;
+
+  /// parentVar = outerVar * splitFactor + innerVar
+  ir::Expr recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const;
+
+  /// outerVar = parentVar - innerVar, innerVar = parentVar - outerVar * splitFactor
+  ir::Stmt recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> relVariables, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const;
+  IndexVarRelType relType;
+
+};
+
 /// The split relation takes a parentVar's iteration space and stripmines into an outervar that iterates over splitFactor-sized
 /// iterations over innerVar
-struct SplitRelNode : public IndexVarRelNode {
+
+/// The split relation takes a parentVar's iteration space and stripmines into an outervar that iterates over splitFactor-sized
+/// iterations over innerVar
+struct SplitRelNode : public GenericRelNode {
   SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t splitFactor);
 
   const IndexVar& getParentVar() const;
@@ -116,7 +168,7 @@ bool operator==(const SplitRelNode&, const SplitRelNode&);
 // DivideRelNode takes a parentVar's iteration space and divides it into divFactor
 // equal pieces. outerVar iterates over the number of pieces, and innerVar iterates
 // over each piece.
-  struct DivideRelNode : public IndexVarRelNode {
+  struct DivideRelNode : public GenericRelNode {
     DivideRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t divFactor);
 
     const IndexVar &getParentVar() const;
@@ -167,7 +219,7 @@ bool operator==(const SplitRelNode&, const SplitRelNode&);
 bool operator==(const DivideRelNode&, const DivideRelNode&);
 
 /// The Pos relation maps an index variable to the position space of a given access
-struct PosRelNode : public IndexVarRelNode {
+struct PosRelNode : public GenericRelNode {
   PosRelNode(IndexVar i, IndexVar ipos, const Access& access);
 
   const IndexVar& getParentVar() const;
@@ -211,7 +263,7 @@ private:
 bool operator==(const PosRelNode&, const PosRelNode&);
 
 /// The fuse relation fuses the iteration space of two directly nested index variables
-struct FuseRelNode : public IndexVarRelNode {
+struct FuseRelNode : public GenericRelNode {
   FuseRelNode(IndexVar outerParentVar, IndexVar innerParentVar, IndexVar fusedVar);
 
   const IndexVar& getOuterParentVar() const;

@@ -110,6 +110,29 @@ ir::Stmt IndexVarRelNode::recoverChild(IndexVar indexVar, std::map<IndexVar, ir:
   return {};
 }
 
+std::vector<ir::Expr> GenericRelNode::computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const {
+  taco_ierror;
+  return {};
+}
+
+std::vector<ir::Expr> GenericRelNode::deriveIterBounds(IndexVar indexVar, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds,
+                                                        std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds,
+                                       std::map<taco::IndexVar, taco::ir::Expr> variableNames,
+                                       Iterators iterators, ProvenanceGraph provGraph) const {
+  taco_ierror;
+  return {};
+}
+
+ir::Expr GenericRelNode::recoverVariable(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, Iterators iterators, std::map<IndexVar, std::vector<ir::Expr>> parentIterBounds, std::map<IndexVar, std::vector<ir::Expr>> parentCoordBounds, ProvenanceGraph provGraph) const {
+  taco_ierror;
+  return {};
+}
+
+ir::Stmt GenericRelNode::recoverChild(IndexVar indexVar, std::map<IndexVar, ir::Expr> variableNames, bool emitVarDecl, Iterators iterators, ProvenanceGraph provGraph) const {
+  taco_ierror;
+  return {};
+}
+
 struct SplitRelNode::Content {
   IndexVar parentVar;
   IndexVar outerVar;
@@ -118,7 +141,7 @@ struct SplitRelNode::Content {
 };
 
 SplitRelNode::SplitRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t splitFactor)
-  : IndexVarRelNode(SPLIT), content(new Content) {
+  : GenericRelNode(SPLIT), content(new Content) {
   content->parentVar = parentVar;
   content->outerVar = outerVar;
   content->innerVar = innerVar;
@@ -297,7 +320,7 @@ struct DivideRelNode::Content {
 };
 
 DivideRelNode::DivideRelNode(IndexVar parentVar, IndexVar outerVar, IndexVar innerVar, size_t divFactor)
-  : IndexVarRelNode(DIVIDE), content(new Content) {
+  : GenericRelNode(DIVIDE), content(new Content) {
   content->parentVar = parentVar;
   content->outerVar = outerVar;
   content->innerVar = innerVar;
@@ -452,7 +475,7 @@ struct PosRelNode::Content {
 };
 
 PosRelNode::PosRelNode(IndexVar i, IndexVar ipos, const Access& access)
-  : IndexVarRelNode(POS), content(new Content(i, ipos, access)) {
+  : GenericRelNode(POS), content(new Content(i, ipos, access)) {
 }
 
 const IndexVar& PosRelNode::getParentVar() const {
@@ -674,7 +697,7 @@ struct FuseRelNode::Content {
 };
 
 FuseRelNode::FuseRelNode(IndexVar outerParentVar, IndexVar innerParentVar, IndexVar fusedVar)
-  : IndexVarRelNode(FUSE), content(new Content) {
+  : GenericRelNode(FUSE), content(new Content) {
   content->outerParentVar = outerParentVar;
   content->innerParentVar = innerParentVar;
   content->fusedVar = fusedVar;
@@ -922,7 +945,7 @@ ProvenanceGraph::ProvenanceGraph(IndexStmt concreteStmt) {
 
       if (rel.getRelType() != PRECOMPUTE && childrenRelMap[parent].size() > 0){
         // check if the current relation is precompute 
-        taco_uerror << " Cannot attach two relation types to one node stuck on type: " << rel.getRelType() << endl;
+        taco_uerror << " Cannot attach two relation types to one node" << endl;
       }
 
       for (IndexVar child : children){

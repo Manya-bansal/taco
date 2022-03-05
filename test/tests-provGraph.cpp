@@ -84,19 +84,19 @@ TEST(provGraph, print_provGraph2) {
              .precompute(precomputedExpr, i1, iw, precomputed)
              .split(i1, i2, i3, 2);
             
-            
+
     ir::IRPrinter irp = ir::IRPrinter(cout);
              
     cout << stmt << endl;
    
-  //   ProvenanceGraph provGraph = ProvenanceGraph(stmt.concretize());
+    ProvenanceGraph provGraph = ProvenanceGraph(stmt.concretize());
 
-  //  cout << "PRINT WRT PARENTS" << endl; 
-  //  provGraph.printGraphParent();
-  //  cout << "***********************" << endl; 
-  //  cout << "PRINT WRT CHILD" << endl; 
-  //  provGraph.printGraphChild();
-  //  cout << "***********************" << endl; 
+   cout << "PRINT WRT PARENTS" << endl; 
+   provGraph.printGraphParent();
+   cout << "***********************" << endl; 
+   cout << "PRINT WRT CHILD" << endl; 
+   provGraph.printGraphChild();
+   cout << "***********************" << endl; 
 
 }
 
