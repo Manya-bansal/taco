@@ -943,10 +943,10 @@ ProvenanceGraph::ProvenanceGraph(IndexStmt concreteStmt) {
       childRelMap[parent] = rel;
       childrenMap[parent] = children;
 
-      if (rel.getRelType() != PRECOMPUTE && childrenRelMap[parent].size() > 0){
-        // check if the current relation is precompute 
-        taco_uerror << " Cannot attach two relation types to one node" << endl;
-      }
+      // if (rel.getRelType() != PRECOMPUTE && childrenRelMap[parent].size() > 0){
+      //   // check if the current relation is precompute 
+      //   taco_uerror << " Cannot attach two relation types to one node" << endl;
+      // }
 
       for (IndexVar child : children){
         childrenRelMap[parent].push_back(make_pair(child, rel));
@@ -1466,6 +1466,9 @@ void ProvenanceGraph::printGraphParent() const {
         cout << "   -----------" << endl;
       }
       cout << "   CHILD : " << child.first <<  " type of : " << child.second << endl;
+      if (child.second.getRelType() == PRECOMPUTE){
+        cout << "   -----------" << endl;
+      }
     }
   }
 }
@@ -1479,6 +1482,9 @@ void ProvenanceGraph::printGraphChild() const {
         cout << "   -----------" << endl;
       }
       cout << "   PARENT : " << child.first <<  " type of : " << child.second << endl;
+      if (child.second.getRelType() == PRECOMPUTE){
+        cout << "   -----------" << endl;
+      }
     }
   }
 }

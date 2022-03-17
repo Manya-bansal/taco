@@ -10,51 +10,7 @@
 
 using namespace taco;
 
-
-// TEST(provGraph, print_provGraph1) {
-  
-//   Tensor<double> A("A", {16}, Format{Dense});
-//   Tensor<double> B("B", {16}, Format{Dense});
-//   Tensor<double> C("C", {16}, Format{Dense});
-
-//   for (int i = 0; i < 16; i++) {
-//       A.insert({i}, (double) i);
-//       B.insert({i}, (double) i);
-//   }
-
-//   A.pack();
-//   B.pack();
-
-//   IndexVar i("i");
-//   IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"), iw("iw");
-//   IndexExpr precomputedExpr = B(i) * C(i);
-//   A(i) = precomputedExpr;
-
-//   IndexStmt stmt = A.getAssignment().concretize();
-//   TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
-//   stmt = stmt.bound(i, 18, BoundType::MaxExact)
-//              .bound(i, 16, BoundType::MaxExact)
-//              .split(i, i0, i1, 5)
-//              .split(i1, i2, i3, 2)
-//              .precompute(precomputedExpr, i1, iw, precomputed);
-
-//     ir::IRPrinter irp = ir::IRPrinter(cout);
-             
-//     cout << stmt << endl;
-   
-//     ProvenanceGraph provGraph = ProvenanceGraph(stmt.concretize());
-
-//    cout << "PRINT WRT PARENTS" << endl; 
-//    provGraph.printGraphParent();
-//    cout << "***********************" << endl; 
-//    cout << "PRINT WRT CHILD" << endl; 
-//    provGraph.printGraphChild();
-//    cout << "***********************" << endl; 
-
-// }
-
-
-TEST(provGraph, print_provGraph2) {
+TEST(provGraph, split_precompute_node) {
   
   Tensor<double> A("A", {16}, Format{Dense});
   Tensor<double> B("B", {16}, Format{Dense});
@@ -75,18 +31,6 @@ TEST(provGraph, print_provGraph2) {
 
   IndexStmt stmt = A.getAssignment().concretize();
   TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
-  stmt = stmt.split(i, i0, i1, 5);
-             
-             
-
-    ir::IRPrinter irp = ir::IRPrinter(cout);
-    cout << stmt << endl;
-
-    cout << "--------" << endl;
-
-    // IndexVarRel rel = IndexVarRel(new SplitRelNode(i, i0, i1, 5));
-             
-
 
     std::vector<IndexVarRel> predicate;
     predicate.push_back(IndexVarRel(new SplitRelNode(i, i0, i1, 5)));
@@ -109,94 +53,137 @@ TEST(provGraph, print_provGraph2) {
 
 }
 
-
-// TEST(provGraph, print_provGraph2) {
+TEST(provGraph, split_precompute_parent_node) {
   
-//   Tensor<double> A("A", {16}, Format{Dense});
-//   Tensor<double> B("B", {16}, Format{Dense});
-//   Tensor<double> C("C", {16}, Format{Dense});
+  Tensor<double> A("A", {16}, Format{Dense});
+  Tensor<double> B("B", {16}, Format{Dense});
+  Tensor<double> C("C", {16}, Format{Dense});
 
-//   for (int i = 0; i < 16; i++) {
-//       A.insert({i}, (double) i);
-//       B.insert({i}, (double) i);
-//   }
+  for (int i = 0; i < 16; i++) {
+      A.insert({i}, (double) i);
+      B.insert({i}, (double) i);
+  }
 
-//   A.pack();
-//   B.pack();
+  A.pack();
+  B.pack();
 
-//   IndexVar i("i");
-//   IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"), iw("iw");
-//   IndexExpr precomputedExpr = B(i) * C(i);
-//   A(i) = precomputedExpr;
+  IndexVar i("i");
+  IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"), iw("iw"), iw1("iw1"), iw2("iw2");
+  IndexExpr precomputedExpr = B(i) * C(i);
+  A(i) = precomputedExpr;
 
-
-//   IndexStmt stmt = A.getAssignment().concretize();
-
-//   TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
-
-//   stmt = stmt.bound(i, 18, BoundType::MaxExact)
-//              .bound(i, 16, BoundType::MaxExact)
-//              .split(i, i0, i1, 5)
-//              .precompute(precomputedExpr, i1, iw, precomputed)
-//              .split(i1, i2, i3, 2);
-            
-
-//     ir::IRPrinter irp = ir::IRPrinter(cout);
-             
-//     cout << stmt << endl;
-   
-//     ProvenanceGraph provGraph = ProvenanceGraph(stmt.concretize());
-
-//    cout << "PRINT WRT PARENTS" << endl; 
-//    provGraph.printGraphParent();
-//    cout << "***********************" << endl; 
-//    cout << "PRINT WRT CHILD" << endl; 
-//    provGraph.printGraphChild();
-//    cout << "***********************" << endl; 
-
-// }
+  IndexStmt stmt = A.getAssignment().concretize();
+  TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
 
 
-
-// TEST(provGraph, print_normal_provGraph) {
+  std::vector<IndexVarRel> predicate;
+  predicate.push_back(IndexVarRel(new SplitRelNode(i, i0, i1, 5)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(i1, iw)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(iw, iw1, iw2, 2)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(i1, i2, i3, 5)));
   
-//   Tensor<double> A("A", {16}, Format{Dense});
-//   Tensor<double> B("B", {16}, Format{Dense});
-//   Tensor<double> C("C", {16}, Format{Dense});
+  ProvenanceGraph provGraph = ProvenanceGraph(suchthat(forall(i0, where(forall(i2, forall(i3, A(i) += precomputed(i1)) ), 
+                                                forall(iw1, forall(iw2, precomputed(iw) += B(i) * C(i))) )), 
+                                                predicate));
 
-//   for (int i = 0; i < 16; i++) {
-//       A.insert({i}, (double) i);
-//       B.insert({i}, (double) i);
-//   }
+   cout << "PRINT WRT PARENTS" << endl; 
+   provGraph.printGraphParent();
+   cout << "***********************" << endl; 
+   cout << "PRINT WRT CHILD" << endl; 
+   provGraph.printGraphChild();
+   cout << "***********************" << endl; 
 
-//   A.pack();
-//   B.pack();
+}
 
-//   IndexVar i("i");
-//   IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"), iw("iw");
-//   IndexExpr precomputedExpr = B(i) * C(i);
-//   A(i) = precomputedExpr;
+//the statement does not match up to 
+//the predicates
 
-//   IndexStmt stmt = A.getAssignment().concretize();
-//   TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
-//   stmt = stmt.bound(i, 18, BoundType::MaxExact)
-//              .bound(i, 16, BoundType::MaxExact)
-//              .split(i, i0, i1, 5)
-//              .precompute(precomputedExpr, i1, iw, precomputed);
-            
+TEST(provGraph, fuse_precompute_node) {
+  
+  Tensor<double> A("A", {16}, Format{Dense});
+  Tensor<double> B("B", {16}, Format{Dense});
+  Tensor<double> C("C", {16}, Format{Dense});
 
-//     ir::IRPrinter irp = ir::IRPrinter(cout);
-             
-//     cout << stmt << endl;
-   
-//     ProvenanceGraph provGraph = ProvenanceGraph(stmt.concretize());
+  for (int i = 0; i < 16; i++) {
+      A.insert({i}, (double) i);
+      B.insert({i}, (double) i);
+  }
 
-//    cout << "PRINT WRT PARENTS" << endl; 
-//    provGraph.printGraphParent();
-//    cout << "***********************" << endl; 
-//    cout << "PRINT WRT CHILD" << endl; 
-//    provGraph.printGraphChild();
-//    cout << "***********************" << endl; 
+  A.pack();
+  B.pack();
 
-// }
+  IndexVar i("i");
+  IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"),i4("i4"), iw("iw"), iw1("iw1"), iw2("iw2");
+  IndexExpr precomputedExpr = B(i) * C(i);
+  A(i) = precomputedExpr;
+
+  IndexStmt stmt = A.getAssignment().concretize();
+  TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
+
+  std::vector<IndexVarRel> predicate;
+  predicate.push_back(IndexVarRel(new FuseRelNode(i0, i1, i2)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(i2, iw)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(iw, iw1, iw2, 2)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(i2, i3, i4, 2)));
+  
+  ProvenanceGraph provGraph = ProvenanceGraph(suchthat(forall(i0, where(forall(i2, forall(i3, A(i) += precomputed(i1)) ), 
+                                              forall(iw1, forall(iw2, precomputed(iw) += B(i) * C(i))) )), 
+                                              predicate));
+
+   cout << "PRINT WRT PARENTS" << endl; 
+   provGraph.printGraphParent();
+   cout << "***********************" << endl; 
+   cout << "PRINT WRT CHILD" << endl; 
+   provGraph.printGraphChild();
+   cout << "***********************" << endl; 
+
+}
+
+//the statement does not match up to 
+//the predicates
+
+TEST(provGraph, multiple_precompute) {
+  
+  Tensor<double> A("A", {16}, Format{Dense});
+  Tensor<double> B("B", {16}, Format{Dense});
+  Tensor<double> C("C", {16}, Format{Dense});
+
+  for (int i = 0; i < 16; i++) {
+      A.insert({i}, (double) i);
+      B.insert({i}, (double) i);
+  }
+
+  A.pack();
+  B.pack();
+
+  IndexVar i("i");
+  IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"),i4("i4"), iw("iw"), iw1("iw1"), iw2("iw2"), \
+            iww("iww"), iww1("iww1"), iww2("iww2");
+  IndexExpr precomputedExpr = B(i) * C(i);
+  A(i) = precomputedExpr;
+
+  IndexStmt stmt = A.getAssignment().concretize();
+  TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
+
+  std::vector<IndexVarRel> predicate;
+  predicate.push_back(IndexVarRel(new SplitRelNode(i, i0, i1, 5)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(i1, iw)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(iw, iw1, iw2, 2)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(i1, i2, i3, 5)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(iw2, iww)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(iww, iww1, iww2, 2)));
+  
+  ProvenanceGraph provGraph = ProvenanceGraph(suchthat(forall(i0, where(forall(i2, forall(i3, A(i) += precomputed(i1)) ), 
+                                              forall(iw1, forall(iw2, precomputed(iw) += B(i) * C(i))) )), 
+                                              predicate));
+
+   cout << "PRINT WRT PARENTS" << endl; 
+   provGraph.printGraphParent();
+   cout << "***********************" << endl; 
+   cout << "PRINT WRT CHILD" << endl; 
+   provGraph.printGraphChild();
+   cout << "***********************" << endl; 
+
+}
+
 
