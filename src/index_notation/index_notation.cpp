@@ -1508,7 +1508,9 @@ IndexStmt IndexStmt::split(IndexVar i, IndexVar i1, IndexVar i2, size_t splitFac
   string reason;
 
   // Add predicate to concrete index notation
+  cout << *this << endl;
   IndexStmt transformed = Transformation(AddSuchThatPredicates({rel})).apply(*this, &reason);
+  cout << transformed << endl;
   if (!transformed.defined()) {
     taco_uerror << reason;
   }
@@ -2524,6 +2526,8 @@ bool isConcreteNotation(IndexStmt stmt, std::string* reason) {
       for (auto& var : op->indexVars) {
         // non underived variables may appear in temporaries, but we don't check these
         if (!boundVars.contains(var) && provGraph.isUnderived(var) && (provGraph.isFullyDerived(var) || !provGraph.isRecoverable(var, definedVars))) {
+          cout << "VAR: " << var << endl; 
+          cout << "bound vars: " << boundVars.contains(var) << endl; 
           *reason = "all variables in concrete notation must be bound by a "
                     "forall statement";
           isConcrete = false;

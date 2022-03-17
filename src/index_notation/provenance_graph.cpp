@@ -1462,8 +1462,10 @@ void ProvenanceGraph::printGraphParent() const {
   for (const auto &item : childrenRelMap){
     cout << "PARENT: " << item.first << endl;
     for (auto child : item.second){
-      cout << "  ";
-      cout << "CHILD : " << child.first <<  " type of : " << child.second << endl;
+      if (child.second.getRelType() == PRECOMPUTE){
+        cout << "   -----------" << endl;
+      }
+      cout << "   CHILD : " << child.first <<  " type of : " << child.second << endl;
     }
   }
 }
@@ -1473,8 +1475,10 @@ void ProvenanceGraph::printGraphChild() const {
   for (const auto &item : parentsRelMap){
     cout << "CHILD: " << item.first << endl;
     for (auto child : item.second){
-      cout << "  ";
-      cout << "PARENT : " << child.first <<  " type of : " << child.second << endl;
+      if (child.second.getRelType() == PRECOMPUTE){
+        cout << "   -----------" << endl;
+      }
+      cout << "   PARENT : " << child.first <<  " type of : " << child.second << endl;
     }
   }
 }
