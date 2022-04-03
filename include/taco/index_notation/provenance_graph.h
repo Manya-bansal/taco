@@ -59,6 +59,10 @@ struct IndexVarRelNode : public util::Manageable<IndexVarRelNode>,
     return {};
   }
 
+  // virtual bool isGeneric() const {
+  //   return false; 
+  // }
+
   /// Given coordinate bounds for parents, determine the new coordinate bounds relative to this possibly fused space
   virtual std::vector<ir::Expr> computeRelativeBound(std::set<IndexVar> definedVars, std::map<IndexVar, std::vector<ir::Expr>> computedBounds, std::map<IndexVar, ir::Expr> variableExprs, Iterators iterators, ProvenanceGraph provGraph) const;
 
@@ -105,6 +109,10 @@ struct GenericRelNode : public IndexVarRelNode{
     taco_ierror;
     return {};
   }
+
+  // virtual bool isGeneric() const{
+  //   return true; 
+  // }
 
   /// if parent is in position space then bound is just the parent's bound
   /// if innerVar defined and not outerVar or if neither variables are defined then return the parent's bound

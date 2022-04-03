@@ -216,7 +216,7 @@ TEST(provGraph, fuse_pos_node) {
   predicate.push_back(IndexVarRel(new SplitRelNode(iw, iw1, iw2, 2)));
   predicate.push_back(IndexVarRel(new PrecomputeRelNode(ip, iww)));
   predicate.push_back(IndexVarRel(new SplitRelNode(iww, iww1, iww2, 2)));
-    predicate.push_back(IndexVarRel(new SplitRelNode(ip, ip1, ip2, 2)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(ip, ip1, ip2, 2)));
 
   ProvenanceGraph provGraph = ProvenanceGraph(suchthat(forall(i0, where(forall(i2, forall(i3, A(i) += precomputed(i1)) ), 
                                               forall(iw1, forall(iw2, precomputed(iw) += B(i) * C(i))) )), 
