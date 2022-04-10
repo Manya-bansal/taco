@@ -2528,6 +2528,9 @@ bool isConcreteNotation(IndexStmt stmt, std::string* reason) {
         if (!boundVars.contains(var) && provGraph.isUnderived(var) && (provGraph.isFullyDerived(var) || !provGraph.isRecoverable(var, definedVars))) {
           cout << "VAR: " << var << endl; 
           cout << "bound vars: " << boundVars.contains(var) << endl; 
+          cout << "Fully derived check: " << provGraph.isFullyDerived(var) << endl; 
+          // cout << "Is recoverable: " << provGraph.isRecoverable(var, definedVars) << endl; 
+          // cout << "Defined vars: " << definedVars << endl:
           *reason = "all variables in concrete notation must be bound by a "
                     "forall statement";
           isConcrete = false;

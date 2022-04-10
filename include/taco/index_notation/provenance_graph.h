@@ -379,6 +379,12 @@ public:
   /// Node is available if parents appear in defined
   bool isAvailable(IndexVar indexVar, std::set<IndexVar> defined) const;
 
+  //returns whether the node is a consumer node
+  bool isConsumer(IndexVar indexVar) const;
+
+   //returns whether the node is a producer node
+  bool isProducer(IndexVar indexVar) const;
+
   /// Node is recoverable if children appear in defined
   bool isRecoverable(IndexVar indexVar, std::set<IndexVar> defined) const;
 
@@ -420,7 +426,7 @@ public:
 
   void printGraphParent(void) const;
 
-   void printGraphChild(void) const;
+  void printGraphChild(void) const;
 
   /// Once indexVar is defined what new variables become recoverable
   /// returned in order of recovery (ie if parent being recovered allows its parent to also be recovered then parent comes first)
