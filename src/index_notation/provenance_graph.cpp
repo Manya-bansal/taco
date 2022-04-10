@@ -1151,9 +1151,13 @@ bool ProvenanceGraph::isConsumer(IndexVar indexVar) const{
   if (!childrenRelMap.count(indexVar)) return 0; 
 
   for (auto& child: childrenRelMap.at(indexVar)){
+
     if (child.second.getRelType() == PRECOMPUTE){
       return 1;
+    } else {
+      return isConsumer(child.first);
     }
+    
   }
 
   return 0;
@@ -1166,9 +1170,13 @@ bool ProvenanceGraph::isProducer(IndexVar indexVar) const{
   if (!parentsRelMap.count(indexVar)) return 0; 
 
   for (auto& parent: parentsRelMap.at(indexVar)){
+
     if (parent.second.getRelType() == PRECOMPUTE){
       return 1;
+    } else {
+      return isProducer(parent.first);
     }
+
   }
 
   return 0;
