@@ -350,7 +350,7 @@ TEST(provGraph, isRecoverableSinglePrecomputeSplit){
   defined3.insert(i2);
   defined3.insert(i3);
 
-  ASSERT_TRUE(provGraph.isRecoverable(i, defined3));
+  ASSERT_TRUE(provGraph.isRecoverable(i, defined3)); 
 
   std::set<IndexVar> defined4;
 

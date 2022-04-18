@@ -1196,9 +1196,7 @@ bool ProvenanceGraph::isRecoverable(taco::IndexVar indexVar, std::set<IndexVar> 
   vector<IndexVar> producers;
   vector<IndexVar> consumers;
   for (auto& def : defined) {
-    
-    // cout << "     Variable : " << def <<  " isConsumer = " << isConsumer(def) <<  " isProducer = " << isProducer(def) << endl;
-
+  
     if (isConsumer(def)){
       consumers.push_back(def);
     }
@@ -1212,33 +1210,36 @@ bool ProvenanceGraph::isRecoverable(taco::IndexVar indexVar, std::set<IndexVar> 
 
 bool ProvenanceGraph::isRecoverablePrecompute(taco::IndexVar indexVar, std::set<taco::IndexVar> defined,
                                               vector<IndexVar> producers, vector<IndexVar> consumers) const {
-  // cout << "********IN RECOVERABLE PRECOMPUTE********" << endl;
-  // cout << "   Parent Vars : " << indexVar << endl;
-  vector<IndexVar> childPrecompute;
-  if (std::find(consumers.begin(), consumers.end(), indexVar) != consumers.end()) {
-    // cout << "first if" << endl;
-    return true;
-  }
-  if (!producers.empty() && isConsumer(indexVar)) {
-    auto precomputeChild = getChildren(indexVar)[0];
-    //  cout << "second if" << endl;
-    if (std::find(producers.begin(), producers.end(), precomputeChild) != producers.end()) {
-      return true;
-    }
-    return isRecoverablePrecompute(precomputeChild, defined, producers, consumers);
-  }
-  for (const IndexVar& child : getChildren(indexVar)) {
-    // q: why is  it !isRecoverablePrecompute?
 
-    
-    if (!defined.count(child) && (isFullyDerived(child) ||
-                                  !isRecoverablePrecompute(child, defined, producers, consumers))) {
-      // cout << "CHILD returned false: " << child << endl;
-      return false;
-    }
+  if (std::find(defined.begin(), defined.end(), indexVar) != defined.end()){
+    return true;
+  }else if (getChildren(indexVar).empty()){
+    return false;
   }
-  // cout << "end" << endl;
-  return true;
+
+  bool precompute_recover = true;
+  bool non_precompute_recover = true;
+  bool child_precompute = false; 
+  bool non_child_precompute = false;
+
+  for (auto& child: childrenRelMap.at(indexVar)) {
+    bool recoverable = isRecoverablePrecompute(child.first, defined, producers, consumers);
+
+    if (child.second.getRelType() == PRECOMPUTE) child_precompute = true;
+    if (child.second.getRelType() != PRECOMPUTE) non_child_precompute = true;
+
+    if (!recoverable){
+      if (child.second.getRelType() == PRECOMPUTE) precompute_recover = false;
+      else non_precompute_recover = false; 
+    }
+    
+  }
+
+  if (child_precompute && !non_child_precompute) return precompute_recover;
+  if (!child_precompute && non_child_precompute) return non_precompute_recover;
+ 
+  return precompute_recover|non_precompute_recover;
+
 }
 
 bool ProvenanceGraph::isChildRecoverable(taco::IndexVar indexVar, std::set<taco::IndexVar> defined) const {
