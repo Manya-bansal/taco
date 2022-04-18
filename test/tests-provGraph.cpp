@@ -286,8 +286,9 @@ TEST(provGraph, isRecoverableSinglePrecompute){
 
   defined3.insert(i0);
   defined3.insert(i2);
+  ASSERT_TRUE(!provGraph.isRecoverable(i, defined3));
+  
   defined3.insert(i3);
-
   ASSERT_TRUE(provGraph.isRecoverable(i, defined3));
 
 }
@@ -340,6 +341,9 @@ TEST(provGraph, isRecoverableSinglePrecomputeSplit){
   std::set<IndexVar> defined2;
 
   defined2.insert(i0);
+
+  ASSERT_TRUE(!provGraph.isRecoverable(i, defined2)); 
+
   defined2.insert(iw);
 
   ASSERT_TRUE(provGraph.isRecoverable(i, defined2));
@@ -348,22 +352,23 @@ TEST(provGraph, isRecoverableSinglePrecomputeSplit){
 
   defined3.insert(i0);
   defined3.insert(i2);
+
+  ASSERT_TRUE(!provGraph.isRecoverable(i, defined3)); 
+
   defined3.insert(i3);
 
   ASSERT_TRUE(provGraph.isRecoverable(i, defined3)); 
 
   std::set<IndexVar> defined4;
 
-
   defined4.insert(i0);
-  defined4.insert(iw1);
   defined4.insert(iw2);
 
-  // cout << "OUTPUT = " << provGraph.isRecoverable(i, defined4) << endl;
+  ASSERT_TRUE(!provGraph.isRecoverable(i, defined4));
+
+  defined4.insert(iw1);
+
   ASSERT_TRUE(provGraph.isRecoverable(i, defined4));
-
-
-  //add assert false cases
 
 }
 
@@ -473,9 +478,10 @@ TEST(provGraph, indexConcreteMultiplePrecompute) {
 
   std::set<IndexVar> defined;
 
-  defined.insert(i0);
   defined.insert(iww);
-
+  ASSERT_TRUE(!provGraph.isRecoverable(i, defined));
+    
+  defined.insert(i0);
   ASSERT_TRUE(provGraph.isRecoverable(i, defined));
 
 }
