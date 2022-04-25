@@ -850,7 +850,7 @@ Stmt LowererImplImperative::lowerForallCloned(Forall forall) {
   // underived or pos variables that have a descendant that has not been defined yet
   vector<IndexVar> varsWithGuard;
   for (auto var : provGraph.getAllIndexVars()) {
-    if (provGraph.isRecoverable(var, definedIndexVars)) {
+    if (provGraph.isRecoverableStrict(var, definedIndexVars)) {
       continue; // already recovered
     }
     if (provGraph.isUnderived(var) && !provGraph.hasPosDescendant(var)) { // if there is pos descendant then will be guarded already

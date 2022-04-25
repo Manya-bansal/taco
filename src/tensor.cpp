@@ -642,8 +642,11 @@ void TensorBase::compile(taco::IndexStmt stmt, bool assembleWhileCompute) {
     }
   }
 
+  cout << "compile1" << endl;
   content->assembleFunc = lower(stmtToCompile, "assemble", true, false);
+  cout << "compile2" << endl;
   content->computeFunc = lower(stmtToCompile, "compute",  assembleWhileCompute, true);
+  cout << "compile3" << endl;
   // If we have to recompile the kernel, we need to create a new Module. Since
   // the module we are holding on to could have been retrieved from the cache,
   // we can't modify it.

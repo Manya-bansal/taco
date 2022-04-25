@@ -259,9 +259,14 @@ TEST(windowing, transformations) {
 
       Tensor<int> c("c", {2, 2}, {Dense, Dense});
       c(i, j) = a(i(2, 4), j(2, 4)) + b(i(4, 6), j(4, 6));
+      cout << "here" << endl;
       auto stmt = c.getAssignment().concretize();
-      c.compile(modifier(stmt));
+      cout << stmt << endl;
+      cout << modifier(stmt) << endl;
+      c.compile(modifier(stmt)); //line that segfaults!
+      cout << "here2" << endl;
       c.evaluate();
+      cout << "here3" << endl;
       equals(c, expected);
       ASSERT_TRUE(equals(c, expected)) << endl << c << endl << expected << endl << format << endl;
     }
