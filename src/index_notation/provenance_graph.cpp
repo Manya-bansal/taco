@@ -1164,6 +1164,52 @@ bool ProvenanceGraph::isConsumer(IndexVar indexVar) const{
 
 }
 
+bool ProvenanceGraph::hasPrecomputeChild(IndexVar indexVar) const{
+
+  if (!childrenRelMap.count(indexVar)) return 0; 
+
+  for (auto& child: childrenRelMap.at(indexVar)){
+
+    if (child.second.getRelType() == PRECOMPUTE){
+      return 1;
+    }
+  }
+
+  return 0;
+
+}
+
+bool ProvenanceGraph::hasPrecomputeParent(IndexVar indexVar) const{
+
+  if (!parentsRelMap.count(indexVar)) return 0; 
+
+  for (auto& parent: parentsRelMap.at(indexVar)){
+
+    if (parent.second.getRelType() == PRECOMPUTE){
+      return 1;
+    }
+  }
+
+  return 0;
+
+}
+
+const IndexVar& ProvenanceGraph::returnPrecomputeChild(IndexVar indexVar) const{
+
+  if (!childrenRelMap.count(indexVar)) return *(new IndexVar); 
+
+  for (auto& child: childrenRelMap.at(indexVar)){
+    //should only have one
+    if (child.second.getRelType() == PRECOMPUTE){
+      return child.first;
+    }
+  }
+
+  return *(new IndexVar);
+
+}
+
+
 
 bool ProvenanceGraph::isProducer(IndexVar indexVar) const{
 
@@ -1186,7 +1232,7 @@ bool ProvenanceGraph::isRecoverable(taco::IndexVar indexVar, std::set<IndexVar> 
 
   if (std::find(defined.begin(), defined.end(), indexVar) != defined.end()){
     return true;
-  }else if (getChildren(indexVar).empty()){
+  }else if (isFullyDerived(indexVar)){
     return false;
   }
 
@@ -1223,10 +1269,10 @@ bool ProvenanceGraph::isRecoverableStrict(taco::IndexVar indexVar, std::set<taco
   vector<IndexVar> consumers;
   for (auto& def : defined) {
 
-    if (isConsumer(def)) {
+    if (hasPrecomputeChild(def)) {
       consumers.push_back(def);
     }
-    if (isProducer(def)) {
+    if (hasPrecomputeParent(def)) {
       producers.push_back(def);
     }
   }
@@ -1236,24 +1282,33 @@ bool ProvenanceGraph::isRecoverableStrict(taco::IndexVar indexVar, std::set<taco
 
 bool ProvenanceGraph::isRecoverablePrecompute(taco::IndexVar indexVar, std::set<taco::IndexVar> defined,
                                               vector<IndexVar> producers, vector<IndexVar> consumers) const {
-  vector<IndexVar> childPrecompute;
+
+  //if it is a consumer and defined then it is recoverable
   if (std::find(consumers.begin(), consumers.end(), indexVar) != consumers.end()) { //if consumer, then true?
     return true;
   }
-  if (!producers.empty() && (childRelMap.count(indexVar) &&
-                             childRelMap.at(indexVar).getRelType() == IndexVarRelType::PRECOMPUTE)) {  //change to is producer
-    auto precomputeChild = getChildren(indexVar)[0]; // change to get precompute child 
+
+  //it is a consumer and not in defined
+  //check if it's precompute node is defined
+  if (!producers.empty() && hasPrecomputeChild(indexVar)) {  //change to is producer
+    auto precomputeChild = returnPrecomputeChild(indexVar); // change to get precompute child 
+
     if (std::find(producers.begin(), producers.end(), precomputeChild) != producers.end()) { // if precompute is defined return true
       return true;
     }
     return isRecoverablePrecompute(precomputeChild, defined, producers, consumers);
   }
+
+
+  //what happenns if no children, but not in derived: we return true: seems wrong!
+  //but false makes a seg fault happen in spmm CPU
   for (const IndexVar& child : getChildren(indexVar)) {
     if (!defined.count(child) && (isFullyDerived(child) ||
                                   !isRecoverablePrecompute(child, defined, producers, consumers))) {
       return false;
     }
   }
+
   return true;
 }
 

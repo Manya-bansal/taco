@@ -379,6 +379,12 @@ public:
   /// Node is available if parents appear in defined
   bool isAvailable(IndexVar indexVar, std::set<IndexVar> defined) const;
 
+  const IndexVar& returnPrecomputeChild(IndexVar indexVar) const;
+
+  bool hasPrecomputeParent(IndexVar indexVar) const;
+
+  bool hasPrecomputeChild(IndexVar indexVar) const;
+
   //returns whether the node is a consumer node
   bool isConsumer(IndexVar indexVar) const;
 
