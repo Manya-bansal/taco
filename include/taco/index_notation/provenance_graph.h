@@ -6,6 +6,7 @@
 namespace taco {
 struct IndexVarRelNode;
 enum IndexVarRelType {UNDEFINED, SPLIT, DIVIDE, POS, FUSE, BOUND, PRECOMPUTE, GENERIC};
+enum TransitionType  {PRECOMPUTE_TRANSITION=1, NON_PRECOMPUTE_TRANSITION=0};
 
 /// A pointer class for IndexVarRelNodes provides some operations for all IndexVarRelTypes
 class IndexVarRel : public util::IntrusivePtr<const IndexVarRelNode> {
@@ -379,11 +380,15 @@ public:
   /// Node is available if parents appear in defined
   bool isAvailable(IndexVar indexVar, std::set<IndexVar> defined) const;
 
-  const IndexVar& returnPrecomputeChild(IndexVar indexVar) const;
+  std::vector<taco::IndexVar>  returnPrecomputeChild(IndexVar indexVar) const;
+
+  std::vector<taco::IndexVar>  returnNonPrecomputeChild(IndexVar indexVar) const;
 
   bool hasPrecomputeParent(IndexVar indexVar) const;
 
   bool hasPrecomputeChild(IndexVar indexVar) const;
+
+  bool hasNonPrecomputeChild(IndexVar indexVar) const;
 
   //returns whether the node is a consumer node
   bool isConsumer(IndexVar indexVar) const;
@@ -395,6 +400,12 @@ public:
   bool isRecoverable(IndexVar indexVar, std::set<IndexVar> defined) const;
 
   bool isRecoverableStrict(taco::IndexVar indexVar, std::set<taco::IndexVar> defined) const;
+
+
+  //shoudl reconstruct th epath using the stmt
+  bool isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const;
+
+  bool isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const;
 
   /// isRecoverable helper method to handle precompute relations and where statements in the provenance graph
   bool isRecoverablePrecompute(IndexVar indexVar, std::set<IndexVar> defined, std::vector<IndexVar> producers, std::vector<IndexVar> consumers) const;

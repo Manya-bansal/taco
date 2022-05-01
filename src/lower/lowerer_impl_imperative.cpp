@@ -849,8 +849,23 @@ Stmt LowererImplImperative::lowerForallCloned(Forall forall) {
   // construct guard
   // underived or pos variables that have a descendant that has not been defined yet
   vector<IndexVar> varsWithGuard;
+  provGraph.printGraphParent();
+
+  cout << "where consumer : " << endl;
+  for (auto &stmt: whereConsumers){
+    cout << stmt << endl; 
+  } 
+
+  cout << "defined vars : " << endl;
+  for (auto &var: definedIndexVars){
+    cout << var << ", "; 
+  } 
+  cout << endl; 
+
   for (auto var : provGraph.getAllIndexVars()) {
+    cout << "var : " << var << " ";
     if (provGraph.isRecoverableStrict(var, definedIndexVars)) {
+      cout << " yes" << endl;
       continue; // already recovered
     }
     if (provGraph.isUnderived(var) && !provGraph.hasPosDescendant(var)) { // if there is pos descendant then will be guarded already
