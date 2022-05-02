@@ -403,9 +403,9 @@ public:
 
 
   //shoudl reconstruct th epath using the stmt
-  bool isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const;
+  bool isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const;
 
-  bool isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const;
+  bool isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const; 
 
   /// isRecoverable helper method to handle precompute relations and where statements in the provenance graph
   bool isRecoverablePrecompute(IndexVar indexVar, std::set<IndexVar> defined, std::vector<IndexVar> producers, std::vector<IndexVar> consumers) const;

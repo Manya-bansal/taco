@@ -524,18 +524,21 @@ TEST(provGraph, isRecoverablePath) {
 
 
   std::set<IndexVar> defined;
-  std::vector<int> transitions;
+  std::map<IndexVar, int> transitions;
 
   //always return true at the fully derived nodes
-  // ASSERT_TRUE(provGraph.isRecoverablePath(iww, defined, transitions));
-  // ASSERT_TRUE(provGraph.isRecoverablePath(i0, defined, transitions));
+  ASSERT_TRUE(provGraph.isRecoverablePath(iww, defined, transitions));
+  ASSERT_TRUE(provGraph.isRecoverablePath(i0, defined, transitions));
 
-  transitions.push_back(1);
-  transitions.push_back(1);
+  // transitions.push_back(1);
+  // transitions.push_back(1);
 
   defined.insert(iww);
+
+  transitions[i1] = PRECOMPUTE_TRANSITION;
+  transitions[iw] = PRECOMPUTE_TRANSITION;
     
-  // defined.insert(i0);
+  // // defined.insert(i0);
   ASSERT_TRUE(provGraph.isRecoverablePath(i1, defined, transitions));
 
   defined.erase(iww);
@@ -543,9 +546,9 @@ TEST(provGraph, isRecoverablePath) {
 
   ASSERT_TRUE(!provGraph.isRecoverablePath(i1, defined, transitions));
 
-  std::vector<int> transitions2;
+  std::map<IndexVar, int> transitions2;
 
-  transitions2.push_back(0);
+  transitions2[i] = NON_PRECOMPUTE_TRANSITION;
 
   ASSERT_TRUE(!provGraph.isRecoverablePath(i, defined, transitions2));
 
@@ -557,7 +560,7 @@ TEST(provGraph, isRecoverablePath) {
 
   ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, transitions2));
 
-  transitions2.push_back(1);
+  transitions2[i1] = PRECOMPUTE_TRANSITION;
   defined.erase(i1);
 
   ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, transitions2));

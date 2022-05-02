@@ -1351,7 +1351,7 @@ bool ProvenanceGraph::isRecoverablePrecompute(taco::IndexVar indexVar, std::set<
   return true;
 }
 
-bool ProvenanceGraph::isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const {
+bool ProvenanceGraph::isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const {
 
   if (isFullyDerived(indexVar)){
     return true;
@@ -1361,50 +1361,38 @@ bool ProvenanceGraph::isRecoverablePath(taco::IndexVar indexVar, std::set<taco::
 
 }
 
-bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::vector<int> transitions) const {
-
+bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const {
 
   if (std::find(defined.begin(), defined.end(), indexVar) != defined.end()){
-    // cout << "true" << endl;
     return true;
   }else if (isFullyDerived(indexVar)){
     return false;
   }
 
-  if (transitions.empty()){
+  if (!transitions.count(indexVar)){
     return false;
   }
 
-  IndexVar lastProducer;
-  IndexVar nextParent = indexVar;
-  int producer = 0;
+  bool producer = false;
+  IndexVar lastProducer = indexVar;
 
-  while (!transitions.empty() && transitions[0] == 1){
-
-    transitions.erase(transitions.begin());
-
-    if (!hasPrecomputeChild(indexVar)){
+  while (transitions.count(lastProducer) && transitions.at(lastProducer) == PRECOMPUTE_TRANSITION){
+    if (!hasPrecomputeChild(lastProducer)){
       return false;
     }
-
-    producer = 1;
-    lastProducer = returnPrecomputeChild(nextParent)[0];
-    nextParent = lastProducer;
+    lastProducer = returnPrecomputeChild(lastProducer)[0];
+    producer = true;
   }
 
   if (producer) return isRecoverablePathHelper(lastProducer, defined, transitions);
-  else if (!transitions.empty() && transitions[0] == 0 &&  hasNonPrecomputeChild(indexVar)){
-    transitions.erase(transitions.begin());
-
-    for (auto& child: returnNonPrecomputeChild(indexVar)){
+  else if (!producer && hasNonPrecomputeChild(lastProducer)){
+    for (auto & child: returnNonPrecomputeChild(lastProducer)){
       if (!isRecoverablePathHelper(child, defined, transitions)){
         return false;
-        }
+      }
     }
     return true;
-
   }
-
 
   return false;
 }
