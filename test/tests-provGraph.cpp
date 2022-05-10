@@ -467,11 +467,12 @@ TEST(provGraph, indexConcreteMultiplePrecompute) {
   //should not throw an error
   stmt = stmt.bound(i, 18, BoundType::MaxExact)
              .split(i, i0, i1, 5)
-             .precompute(precomputedExpr, i1, iw, precomputed)
              .split(i1, i2, i3, 2)
-             .split(iw, iw1, iw2, 2)
+              .precompute(precomputedExpr, i1, iw, precomputed)
              .precompute(precomputedExpr, iw, iww, precomputed);
             // .split(iww, iww1, iww2, 2); fails
+
+  cout << stmt << endl;
 
   ProvenanceGraph provGraph =  ProvenanceGraph(stmt);
 
@@ -524,47 +525,102 @@ TEST(provGraph, isRecoverablePath) {
 
 
   std::set<IndexVar> defined;
-  std::map<IndexVar, int> transitions;
+  std::set<IndexVar> consumers;
 
   //always return true at the fully derived nodes
-  ASSERT_TRUE(provGraph.isRecoverablePath(iww, defined, transitions));
-  ASSERT_TRUE(provGraph.isRecoverablePath(i0, defined, transitions));
+  ASSERT_TRUE(provGraph.isRecoverablePath(iww, defined, consumers));
+  ASSERT_TRUE(provGraph.isRecoverablePath(i0, defined, consumers));
 
   // transitions.push_back(1);
   // transitions.push_back(1);
 
   defined.insert(iww);
 
-  transitions[i1] = PRECOMPUTE_TRANSITION;
-  transitions[iw] = PRECOMPUTE_TRANSITION;
-    
+  consumers.insert(i1);
+  consumers.insert(iw);
+
   // // defined.insert(i0);
-  ASSERT_TRUE(provGraph.isRecoverablePath(i1, defined, transitions));
+  ASSERT_TRUE(provGraph.isRecoverablePath(i1, defined, consumers));
 
   defined.erase(iww);
   defined.insert(iw);
 
-  ASSERT_TRUE(!provGraph.isRecoverablePath(i1, defined, transitions));
+  ASSERT_TRUE(!provGraph.isRecoverablePath(i1, defined, consumers));
 
-  std::map<IndexVar, int> transitions2;
+  std::set<IndexVar> consumers2;
 
-  transitions2[i] = NON_PRECOMPUTE_TRANSITION;
-
-  ASSERT_TRUE(!provGraph.isRecoverablePath(i, defined, transitions2));
+  ASSERT_TRUE(!provGraph.isRecoverablePath(i, defined, consumers2));
 
   defined.insert(i0);
 
-  ASSERT_TRUE(!provGraph.isRecoverablePath(i, defined, transitions2));
+  ASSERT_TRUE(!provGraph.isRecoverablePath(i, defined, consumers2));
 
   defined.insert(i1);
 
-  ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, transitions2));
+  ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, consumers2));
 
-  transitions2[i1] = PRECOMPUTE_TRANSITION;
+  consumers2.insert(i1);
   defined.erase(i1);
 
-  ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, transitions2));
+  ASSERT_TRUE(provGraph.isRecoverablePath(i, defined, consumers2));
 
+
+}
+
+
+
+
+TEST(provGraph, indexConcreteMultiplePrecompute_2) {
+  
+  Tensor<double> A("A", {16}, Format{Dense});
+  Tensor<double> B("B", {16}, Format{Dense});
+  Tensor<double> C("C", {16}, Format{Dense});
+
+  for (int i = 0; i < 16; i++) {
+      A.insert({i}, (double) i);
+      B.insert({i}, (double) i);
+  }
+
+  A.pack();
+  B.pack();
+
+  IndexVar i("i");
+  IndexVar i0("i0"), i1("i1"), i2("i2"), i3("i3"), ip1("ip1"),ip2("ip2"), iw("iw"), iw1("iw1"), iw2("iw2"), \
+            iww("iww"), iww1("iww1"), iww2("iww2"), ip("ip");
+  IndexExpr precomputedExpr = B(i) * C(i);
+  A(i) = precomputedExpr;
+
+  IndexStmt stmt = A.getAssignment().concretize();
+  TensorVar precomputed("precomputed", Type(Float64, {Dimension(i1)}), taco::dense);
+
+
+  //should not throw an error
+  stmt = stmt.bound(i, 18, BoundType::MaxExact)
+             .split(i, i0, i1, 5)
+             .split(i1, i2, i3, 2)
+              .precompute(precomputedExpr, i3, iw, precomputed)
+              .precompute(precomputedExpr, iw, iww, precomputed);
+            // .split(iww, iww1, iww2, 2); fails
+
+  cout << stmt << endl;
+
+  std::vector<IndexVarRel> predicate;
+
+  predicate.push_back(IndexVarRel(new SplitRelNode(i, i0, i1, 5)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(i3, iww)));
+  predicate.push_back(IndexVarRel(new PrecomputeRelNode(iww, iw)));
+  predicate.push_back(IndexVarRel(new SplitRelNode(i1, i2, i3, 5)));
+
+
+
+  // does not match concrete notation
+  // and predicate list
+  // both valid, but do not match
+  string reason;
+  cout << isConcreteNotation(suchthat(forall(i0, forall(i2, where(forall(i3, A(i) += precomputed(i3)), where(forall(iw, precomputed(iw) = precomputed(iw)), forall(iww, precomputed(iww) += B(i) * C(i)))))), predicate)
+                      ,&reason) << endl;
+
+  // ProvenanceGraph provGraph =  ProvenanceGraph(stmt);
 
 }
 

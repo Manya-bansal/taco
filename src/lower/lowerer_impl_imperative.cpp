@@ -851,20 +851,18 @@ Stmt LowererImplImperative::lowerForallCloned(Forall forall) {
   vector<IndexVar> varsWithGuard;
   provGraph.printGraphParent();
 
-  cout << "where consumer : " << endl;
-  for (auto &stmt: whereConsumers){
-    cout << stmt << endl; 
-  } 
 
-  cout << "defined vars : " << endl;
-  for (auto &var: definedIndexVars){
-    cout << var << ", "; 
-  } 
-  cout << endl; 
+  // cout << "HERE!!" << endl;
+
+  cout << "******" << endl;
+  for (auto & iv : consumers){
+    cout << iv << endl;
+  }
+  cout << "******" << endl;
 
   for (auto var : provGraph.getAllIndexVars()) {
     cout << "var : " << var << " ";
-    if (provGraph.isRecoverableStrict(var, definedIndexVars)) {
+    if (provGraph.isRecoverablePath(var, definedIndexVars, consumers)) {
       cout << " yes" << endl;
       continue; // already recovered
     }
@@ -2253,7 +2251,55 @@ Stmt LowererImplImperative::lowerWhere(Where where) {
     restoreAtomicDepth = true;
   }
 
+
+
+  // consumers.insert(where.getConsumer())
+  //TODO add the transition map 
+  // cout << where.getConsumer() << endl; 
+
+  if (isa<Forall>(where.getConsumer())){
+    consumers.insert(to<Forall>(where.getConsumer()).getIndexVar());
+  }else{
+    for (auto &iv: getIndexVars(where.getProducer())){
+      consumers.insert(iv);
+    }
+  }
+
+  // consumers.insert(to<Forall>(where.getConsumer()).getIndexVar());
   Stmt producer = lower(where.getProducer());
+
+  if (isa<Forall>(where.getConsumer())){
+    consumers.erase(to<Forall>(where.getConsumer()).getIndexVar());
+  }else{
+    for (auto &iv: getIndexVars(where.getProducer())){
+      consumers.erase(iv);
+    }
+  }
+
+  
+
+
+  // cout  << "Consumer Vars = " << endl;
+  // for (auto &iv: getIndexVars(where.getConsumer())){
+  //  cout << "\t" << iv <<endl;
+  // }
+
+  // cout  <<"Producer Vars = " << endl;
+  // for (auto &iv: getIndexVars(where.getProducer())){
+  //   cout <<"\t" << iv <<endl;
+  // }
+
+  // cout << "Result = " << to<Forall>(where.getConsumer()).getIndexVar() << endl;
+  // cout << "Result = " << where.getProducer() << endl;
+
+  // cout  << "**********" << endl;
+
+  //where.getIndex
+  //TODO remove from the transition map 
+
+  // cout << "Temp = " << where.getTemporary() << endl;
+
+ 
   if (accelerateDenseWorkSpace) {
     const Expr indexListSizeExpr = tempToIndexListSize.at(temporary);
     const Stmt indexListSizeDecl = VarDecl::make(indexListSizeExpr, ir::Literal::make(0));

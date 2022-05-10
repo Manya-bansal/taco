@@ -58,6 +58,10 @@ public:
   ir::Stmt lower(IndexStmt stmt, std::string name, 
                  bool assemble, bool compute, bool pack, bool unpack);
 
+  
+ 
+
+
 protected:
 
   /// Lower an assignment statement.
@@ -490,6 +494,7 @@ private:
 
   bool ignoreVectorize = false; // already being taken into account
 
+   std::set<IndexVar> consumers;
   std::vector<ir::Stmt> whereConsumers;
   std::vector<TensorVar> whereTemps;
   std::map<TensorVar, const AccessNode *> whereTempsToResult;

@@ -27,7 +27,7 @@ TEST(bound, bound_and_rebound) {
   B.pack();
 
   IndexVar i("i");
-  IndexVar i0("i0"), i1("i1");
+  IndexVar i0("i0"), i1("i1"), iw("iw"), iww("iww"), i00("i00"), i11("i11");
   IndexExpr precomputedExpr = B(i) * C(i);
   A(i) = precomputedExpr;
 
@@ -36,12 +36,13 @@ TEST(bound, bound_and_rebound) {
   stmt = stmt.bound(i, 18, BoundType::MaxExact)
              .bound(i, 16, BoundType::MaxExact)
              .split(i, i0, i1, 5)
-             .precompute(precomputedExpr, i1, i1, precomputed);
-   
+             .precompute(precomputedExpr, i1, iw, precomputed);
+
   A.compile(stmt.concretize());
   A.assemble();
   A.compute();
 
+ 
   Tensor<double> expected("expected", {16}, Format{Dense});
   expected(i) = B(i) * C(i);
   expected.compile();

@@ -1351,17 +1351,17 @@ bool ProvenanceGraph::isRecoverablePrecompute(taco::IndexVar indexVar, std::set<
   return true;
 }
 
-bool ProvenanceGraph::isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const {
+bool ProvenanceGraph::isRecoverablePath(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::set<IndexVar> consumers) const {
 
   if (isFullyDerived(indexVar)){
     return true;
   }
 
-  return isRecoverablePathHelper(indexVar, defined, transitions);
+  return isRecoverablePathHelper(indexVar, defined, consumers);
 
 }
 
-bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::map<IndexVar, int> transitions) const {
+bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<taco::IndexVar> defined, std::set<IndexVar> consumers) const {
 
   if (std::find(defined.begin(), defined.end(), indexVar) != defined.end()){
     return true;
@@ -1369,14 +1369,10 @@ bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<
     return false;
   }
 
-  if (!transitions.count(indexVar)){
-    return false;
-  }
-
   bool producer = false;
   IndexVar lastProducer = indexVar;
 
-  while (transitions.count(lastProducer) && transitions.at(lastProducer) == PRECOMPUTE_TRANSITION){
+  while (consumers.count(lastProducer)){
     if (!hasPrecomputeChild(lastProducer)){
       return false;
     }
@@ -1384,10 +1380,10 @@ bool ProvenanceGraph::isRecoverablePathHelper(taco::IndexVar indexVar, std::set<
     producer = true;
   }
 
-  if (producer) return isRecoverablePathHelper(lastProducer, defined, transitions);
+  if (producer) return isRecoverablePathHelper(lastProducer, defined, consumers);
   else if (!producer && hasNonPrecomputeChild(lastProducer)){
     for (auto & child: returnNonPrecomputeChild(lastProducer)){
-      if (!isRecoverablePathHelper(child, defined, transitions)){
+      if (!isRecoverablePathHelper(child, defined, consumers)){
         return false;
       }
     }

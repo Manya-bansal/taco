@@ -2514,6 +2514,8 @@ bool isConcreteNotation(IndexStmt stmt, std::string* reason) {
 
   ProvenanceGraph provGraph = ProvenanceGraph(stmt);
 
+  cout << stmt << endl;
+
   match(stmt,
     std::function<void(const ForallNode*,Matcher*)>([&](const ForallNode* op,
                                                         Matcher* ctx) {
@@ -2525,13 +2527,16 @@ bool isConcreteNotation(IndexStmt stmt, std::string* reason) {
     }),
     std::function<void(const AccessNode*)>([&](const AccessNode* op) {
       for (auto& var : op->indexVars) {
+        // for (auto &def : definedVars){
+        //     cout << def << endl;
+        //   }
+        // cout << "****" << endl;
         // non underived variables may appear in temporaries, but we don't check these
         if (!boundVars.contains(var) && provGraph.isUnderived(var) && (provGraph.isFullyDerived(var) || !provGraph.isRecoverable(var, definedVars))) {
-          // cout << "VAR: " << var << endl; 
-          // cout << "bound vars: " << boundVars.contains(var) << endl; 
-          // cout << "Fully derived check: " << provGraph.isFullyDerived(var) << endl; 
-          // cout << "Is recoverable: " << provGraph.isRecoverable(var, definedVars) << endl; 
-          // cout << "Defined vars: " << definedVars << endl:
+          cout << "VAR: " << var << endl; 
+          cout << "bound vars: " << boundVars.contains(var) << endl; 
+          cout << "Fully derived check: " << provGraph.isFullyDerived(var) << endl; 
+          cout << "Is recoverable: " << provGraph.isRecoverable(var, definedVars) << endl; 
           *reason = "all variables in concrete notation must be bound by a "
                     "forall statement";
           isConcrete = false;
