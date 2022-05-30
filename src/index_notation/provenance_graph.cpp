@@ -1495,7 +1495,7 @@ std::vector<ir::Expr> ProvenanceGraph::deriveIterBounds(IndexVar indexVar, std::
   }
 
   IndexVarRel rel = parentRelMap.at(indexVar);
-
+  //add a check here to check whether indexvar is bound
   return rel.getNode()->deriveIterBounds(indexVar, parentIterBounds, parentCoordBounds, variableNames, iterators, *this);
 }
 
